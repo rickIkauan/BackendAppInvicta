@@ -47,14 +47,6 @@ exports.deleteFile = async (req, res) => {
             return res.status(404).json({ message: 'Arquivo não encontrado' })
         }
 
-        const params = {
-            Bucket: process.env.AWS_BUCKET_NAME,
-            Key: file.s3url.split('/files/')[1]
-        }
-
-        const command = new DeleteObjectCommand(params)
-        await s3.send(command)
-
         await File.findByIdAndDelete(id)
 
         res.status(200).json({ message: 'Arquivo excluido com sucesso' })
