@@ -10,6 +10,6 @@ router.get('/listuser', authController.listUsers) // Rota para listar usuários
 router.get('/listuser/unit/:id', authController.listUserUnit) // Rota para listar unidades do usuário
 router.get('/listuser/tool/:id', authController.listUserTool) // Rota para listar ferramentas do usuário
 router.get('/listuser/service/:id', authController.listUserService) // Rota para listar serviços do usuário
-router.put('/edituser/:id', authController.userEdit) // Rota para usuário mudar sua senha
+router.put('/edituser/:email', authController.userEdit) // Rota para usuário mudar sua senha
 
 module.exports = router

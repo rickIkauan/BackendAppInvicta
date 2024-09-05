@@ -141,24 +141,24 @@ exports.listUserService = async (req, res) => {
 
 // Rota para usuário mudar sua senha
 exports.userEdit = async (req, res) => {
-    const { id } = req.params
+    const { email } = req.params
     const { password: activePass, newPassword } = req.body
 
     try {
-        const user = await User.findById(id)
-        if (!user) return res.status(404).json({ message: 'Usuário não encontrado' })
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ error: 'Usuário não encontrado' })
 
         const isMatch = await user.comparePassword(activePass)
-        if (!isMatch) return res.status(400).json({ message: 'Senha atual incorreta' })
-        
+        if (!isMatch) return res.status(400).json({ error: 'Senha atual incorreta' })
+
         if (newPassword) {
             user.password = newPassword
         }
-
+        
         await user.save()
 
         res.status(200).json({ message: 'Senha atualizada com sucesso' })
     } catch (err) {
-        res.status(400).json({ message: 'Erro ao atualizar senha', err})
+        res.status(400).json({ error: err.message })
     }
 }
