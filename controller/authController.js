@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const Data = require('../models/Video')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 
@@ -18,6 +19,16 @@ exports.registerUser = async (req, res) => {
         })
         
         await user.save()
+
+        const videos = await Data.find()
+
+        for (const video of videos) {
+            if (!video.status.has(user._id.toString())) {
+                video.status.set(user._id.toString(), 'Não iniciado')
+                await video.save()
+            }
+        }
+
         res.status(201).json(user)
     } catch (err) {
         res.status(500).json({ message: 'Usuário não pode ser criado', err })

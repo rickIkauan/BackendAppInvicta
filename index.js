@@ -12,8 +12,13 @@ const PORT = process.env.PORT || 4000
 
 connectDB()
 
-app.use(cors())
-app.use(bodyParser.json())
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'] 
+}))
+
+app.use(bodyParser.json({ limit: '1024mb' }))
 
 app.get('/', (req, res) => {
     res.json({ message: 'Backend app invicta' })

@@ -8,6 +8,7 @@ const upload = multer({
         s3: s3,
         bucket: process.env.AWS_BUCKET_NAME,
         acl: 'private',
+        limits: { fileSize: 1024 * 1024 * 1024 },
         metadata: (req, file, cb) => {
             cb(null, { fieldName: file.fieldname });
         },
