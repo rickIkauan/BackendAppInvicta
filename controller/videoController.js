@@ -1,7 +1,9 @@
 const Data = require('../models/Video')
 const User = require('../models/User')
 const s3 = require('../config/awsConfig')
-const { PutObjectCommand } = require('@aws-sdk/client-s3')
+const { Upload } = require('@aws-sdk/lib-storage')
+const { PutObjectCommand, S3Client } = require('@aws-sdk/client-s3')
+const { param } = require('..')
 require('dotenv').config()
 
 // Puxar id de todos os usuários
@@ -14,8 +16,13 @@ const getAllUserIds = async (req, res) => {
 exports.uploadVideo = async (req, res) => {
     try {
         const { title, subtitle, description, tool } = req.body
-        const { file } = req
+        const file = req.file
         const allUsersIds = await getAllUserIds()
+
+        if (!file) {
+            return res.status(400).json({ message: 'Arquivo não encontrado ou inválido.' })
+        }
+        console.log('File:', file)
 
         const params = {
             Bucket: process.env.AWS_BUCKET_NAME,
@@ -24,15 +31,22 @@ exports.uploadVideo = async (req, res) => {
             ContentType: file.mimetype
         }
 
-        const command = new PutObjectCommand(params)
-        const data = await s3.send(command)
+        const upload = new Upload({
+            client: s3,
+            params: params,
+            queueSize: 4,
+            partSize: 1024 * 1024 * 1024,
+            leavePartsOnError: false
+        })
+
+        const data = await upload.done()
 
         const newVideo = new Data({
             title,
             subtitle,
             description,
             tool,
-            s3url: file.location,
+            s3url: data.Location,
             user: allUsersIds,
             status: allUsersIds.reduce((statusMap, userId) => {
                 statusMap[userId] = 'Não iniciado'
@@ -43,6 +57,7 @@ exports.uploadVideo = async (req, res) => {
         await newVideo.save()
         res.status(201).json(newVideo)
     } catch (err) {
+        console.error('Erro ao enviar o treinamento:', err)
         res.status(500).json({ message: 'Erro ao enviar o treinamento', err })
     }
 }
