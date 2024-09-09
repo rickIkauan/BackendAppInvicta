@@ -1,6 +1,7 @@
 const File = require('../models/File')
 const s3 = require('../config/awsConfig')
 const createFileStream = require('../utils/fileUtils')
+const { Upload } = require('@aws-sdk/lib-storage')
 const { PutObjectCommand } = require('@aws-sdk/client-s3')
 const { DeleteObjectCommand } = require('@aws-sdk/client-s3')
 require('dotenv').config()
@@ -9,7 +10,11 @@ require('dotenv').config()
 exports.uploadFile = async (req, res) => {
     try {
         const { title, unit, month, service } = req.body
-        const { file } = req
+        const file = req.file
+
+        if (!file) {
+            return res.status(400).json({ message: 'Arquivo não encontrado ou inválido.' })
+        }
         
         const params = {
             Bucket: process.env.AWS_BUCKET_NAME,
@@ -18,8 +23,15 @@ exports.uploadFile = async (req, res) => {
             ContentType: file.mimetype,
         }
 
-        const command = new PutObjectCommand(params)
-        const data = await s3.send(command)
+        const upload = new Upload({
+            client: s3,
+            params: params,
+            queueSize: 4,
+            partSize: 1024 * 1024 * 1024,
+            leavePartsOnError: false
+        })
+
+        const data = await upload.done()
 
         const newFile = new File({
             title,
@@ -27,7 +39,7 @@ exports.uploadFile = async (req, res) => {
             month,
             service,
             filename: file.originalname,
-            s3url: file.location
+            s3url: data.Location
         })
 
         await newFile.save()

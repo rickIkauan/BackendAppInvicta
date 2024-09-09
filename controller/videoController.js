@@ -22,7 +22,6 @@ exports.uploadVideo = async (req, res) => {
         if (!file) {
             return res.status(400).json({ message: 'Arquivo não encontrado ou inválido.' })
         }
-        console.log('File:', file)
 
         const params = {
             Bucket: process.env.AWS_BUCKET_NAME,
